@@ -102,7 +102,7 @@
         [Parameter(Mandatory = $false,
             ValueFromPipelineByPropertyName = $true,
             Position = 2)]
-        [string]$Path = "$env:temp\PowershellScript.log",
+        [string]$Path = "$env:SystemRoot\Logs\Powershell-$(Get-Date -format filedate).log",
 
         [Parameter(Mandatory = $false,
             ValueFromPipelineByPropertyName = $true)]

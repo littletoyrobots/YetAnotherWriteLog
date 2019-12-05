@@ -40,6 +40,10 @@
 
         {"TimeStamp":"2018-02-01T12:01:24.8908638+00:00","Level":"Warning","Message":"My message"}
 
+        .PARAMETER ToHost
+
+        Used to also send the message to the host console stream, not output.  Will print default color for 'Info', Yellow for 'Warning', Red for 'Error', Cyan for 'Debug'
+
         .EXAMPLE
         Write-Log -StartNew
         Starts a new logfile in the default location
@@ -105,6 +109,10 @@
         [switch]$JSONFormat,
 
         [Parameter(Mandatory = $false,
+            ValueFromPipelineByPropertyName = $true)]
+        [switch]$ToHost,
+
+        [Parameter(Mandatory = $false,
             ValueFromPipelineByPropertyName = $true,
             ParameterSetName = 'STARTNEW')]
         [switch]$StartNew,
@@ -145,8 +153,8 @@
                 if ($JSONFormat) {
                     $logobject = [PSCustomObject][ordered]@{
                         TimeStamp = Get-Date -Format o
-                        Level   = $levelText
-                        Message = $Message
+                        Level     = $levelText
+                        Message   = $Message
                     }
                     #Convert to a single line of JSON and add it to the file
                     $logMessage = $logObject | ConvertTo-Json -Compress
@@ -155,11 +163,20 @@
                 else {
                     $logobject = [PSCustomObject][ordered]@{
                         TimeStamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-                        Level   = $levelText
-                        Message = $Message
+                        Level     = $levelText
+                        Message   = $Message
                     }
                     $logMessage = "$formattedDate`t$levelText`t$Message" #Build human readable line
                     $logObject | Export-Csv -Path $Path -Delimiter "`t" -NoTypeInformation -Append
+                }
+
+                if ($ToHost) {
+                    switch ($Level) {
+                        'Info' { Write-Host "$formattedDate $levelText $Message" }
+                        'Warning' { Write-Host "$formattedDate $levelText $Message" -ForegroundColor Yellow }
+                        'Error' { Write-Host "$formattedDate $levelText $Message" -ForegroundColor Red }
+                        'Debug' { Write-Host "$formattedDate $levelText $Message" -ForegroundColor Cyan }
+                    }
                 }
 
                 Write-Verbose $logMessage #Only verbose line in the function
